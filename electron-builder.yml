@@ -42,9 +42,22 @@ linux:
       arch:
         - x64
         - arm64
+    - target: rpm
+      arch:
+        - x64
+        - arm64
+    - target: AppImage
+      arch:
+        - x64
+        - arm64
   icon: assets/icon.png
   category: Development
   maintainer: Jakub Duch
+  executableName: thirdeye
+  desktop:
+    Name: ThirdEye
+    Comment: GitHub repository monitoring desktop app
+    Categories: Development;Utility;
 
 deb:
   depends:
@@ -57,6 +70,22 @@ deb:
     - libatspi2.0-0
     - libuuid1
     - libsecret-1-0
-  artifactName: ThirdEye-${version}-linux.${ext}
+  artifactName: ThirdEye-${version}-linux-${arch}.${ext}
+
+rpm:
+  depends:
+    - gtk3
+    - libnotify
+    - nss
+    - libXScrnSaver
+    - libXtst
+    - xdg-utils
+    - at-spi2-core
+    - libuuid
+    - libsecret
+  artifactName: ThirdEye-${version}-linux-${arch}.${ext}
+
+appImage:
+  artifactName: ThirdEye-${version}-linux-${arch}.${ext}
 
 publish: null

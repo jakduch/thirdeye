@@ -36,11 +36,13 @@
 
 Download the latest release for your platform from the [Releases](../../releases) page:
 
-| Platform | File |
-|----------|------|
-| macOS (Universal) | `ThirdEye-x.x.x-mac-universal.dmg` |
-| Windows | `ThirdEye-x.x.x-win-setup.exe` |
-| Linux | `ThirdEye-x.x.x-linux.deb` |
+| Platform | File | Distros |
+|----------|------|---------|
+| macOS (Universal) | `ThirdEye-x.x.x-mac-universal.dmg` | Intel & Apple Silicon |
+| Windows | `ThirdEye-x.x.x-win-setup.exe` | Windows 10+ |
+| Linux (deb) | `ThirdEye-x.x.x-linux-*.deb` | Debian, Ubuntu, Mint, Pop!_OS |
+| Linux (rpm) | `ThirdEye-x.x.x-linux-*.rpm` | Fedora, RHEL, CentOS, openSUSE |
+| Linux (AppImage) | `ThirdEye-x.x.x-linux-*.AppImage` | Any distro (no install needed) |
 
 ## Build from Source
 
