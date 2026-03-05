@@ -23,7 +23,7 @@
   <a href="https://github.com/jakduch/thirdeye"><img src="https://img.shields.io/github/stars/jakduch/thirdeye?style=social" alt="GitHub Stars"></a>
   <a href="https://github.com/jakduch/thirdeye/issues"><img src="https://img.shields.io/github/issues/jakduch/thirdeye" alt="Open Issues"></a>
   <a href="https://github.com/jakduch/thirdeye/commits/main"><img src="https://img.shields.io/github/last-commit/jakduch/thirdeye" alt="Last Commit"></a>
-  <img src="https://img.shields.io/github/repo-size/jakduch/thirdeye" alt="Repo Size">
+  <img src="https://img.shields.io/github/languages/code-size/jakduch/thirdeye" alt="Code Size">
 </p>
 
 <p align="center">
