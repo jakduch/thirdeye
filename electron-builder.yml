@@ -1,0 +1,62 @@
+appId: com.thirdeye-git.app
+productName: ThirdEye
+
+directories:
+  output: release
+  buildResources: assets
+
+files:
+  - dist/**/*
+  - assets/**/*
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - universal
+  icon: assets/icon.png
+  category: public.app-category.developer-tools
+  darkModeSupport: true
+
+dmg:
+  title: ThirdEye
+  artifactName: ThirdEye-${version}-mac-universal.${ext}
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: assets/icon.png
+  uninstallerIcon: assets/icon.png
+  artifactName: ThirdEye-${version}-win-setup.${ext}
+
+linux:
+  target:
+    - target: deb
+      arch:
+        - x64
+        - arm64
+  icon: assets/icon.png
+  category: Development
+  maintainer: Jakub Duch
+
+deb:
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0
+  artifactName: ThirdEye-${version}-linux.${ext}
+
+publish: null
