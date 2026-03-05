@@ -28,5 +28,6 @@ module.exports = {
   externals: {
     'electron-store': 'commonjs electron-store',
     '@octokit/rest': 'commonjs @octokit/rest',
+    'electron-updater': 'commonjs electron-updater',
   },
 };

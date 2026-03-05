@@ -14,6 +14,9 @@ mac:
     - target: dmg
       arch:
         - universal
+    - target: zip
+      arch:
+        - universal
   icon: assets/icon.png
   category: public.app-category.developer-tools
   darkModeSupport: true
@@ -30,8 +33,9 @@ win:
   icon: assets/icon.ico
 
 nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
+  oneClick: true
+  perMachine: false
+  allowElevation: true
   installerIcon: assets/icon.ico
   uninstallerIcon: assets/icon.ico
   artifactName: ThirdEye-${version}-win-setup.${ext}
@@ -54,8 +58,8 @@ linux:
   category: Development
   maintainer: Jakub Duch
   executableName: thirdeye
-  synopsis: GitHub repository monitoring desktop app
-  description: Monitor your GitHub PRs, issues, notifications, and CI checks from your desktop.
+  synopsis: Multi-provider Git repository monitoring desktop app
+  description: Monitor your GitHub, GitLab & Bitbucket PRs, issues, notifications, and CI checks from your desktop.
 
 deb:
   depends:
@@ -86,4 +90,7 @@ rpm:
 appImage:
   artifactName: ThirdEye-${version}-linux-${arch}.${ext}
 
-publish: null
+publish:
+  provider: github
+  owner: jakduch
+  repo: thirdeye

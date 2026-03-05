@@ -3,62 +3,76 @@ import { IPC } from '../../shared/ipc-channels';
 import type {
   GitHubNotification, IssueDetail, PRDetail, Comment,
   AppSettings, RateLimitInfo, UserItem, CheckSuiteSummary,
-  CheckStatusChange,
+  CheckStatusChange, Account, ProviderRepo, ProviderLinkedItems,
 } from '../../shared/types';
 
 export const api = {
-  // Auth
+  // ── Legacy Auth (backward compat) ──
   hasToken: (): Promise<boolean> => ipcRenderer.invoke(IPC.HAS_TOKEN),
   getToken: (): Promise<string | null> => ipcRenderer.invoke(IPC.GET_TOKEN),
   setToken: (token: string): Promise<boolean> => ipcRenderer.invoke(IPC.SET_TOKEN, token),
   deleteToken: (): Promise<boolean> => ipcRenderer.invoke(IPC.DELETE_TOKEN),
 
-  // Notifications
-  getNotifications: (): Promise<GitHubNotification[]> => ipcRenderer.invoke(IPC.GET_NOTIFICATIONS),
-  markRead: (threadId: string): Promise<boolean> => ipcRenderer.invoke(IPC.MARK_READ, threadId),
-  markAllRead: (): Promise<boolean> => ipcRenderer.invoke(IPC.MARK_ALL_READ),
+  // ── Account Management ──
+  getAccounts: (): Promise<Account[]> => ipcRenderer.invoke(IPC.GET_ACCOUNTS),
+  addAccount: (account: Account): Promise<Account[]> => ipcRenderer.invoke(IPC.ADD_ACCOUNT, account),
+  removeAccount: (accountId: string): Promise<Account[]> => ipcRenderer.invoke(IPC.REMOVE_ACCOUNT, accountId),
+  updateAccount: (accountId: string, partial: Partial<Account>): Promise<Account[]> =>
+    ipcRenderer.invoke(IPC.UPDATE_ACCOUNT, accountId, partial),
 
-  // My PRs & Issues
+  // ── Notifications ──
+  getNotifications: (): Promise<GitHubNotification[]> => ipcRenderer.invoke(IPC.GET_NOTIFICATIONS),
+  markRead: (accountId: string, threadId: string): Promise<boolean> =>
+    ipcRenderer.invoke(IPC.MARK_READ, accountId, threadId),
+  markAllRead: (accountId?: string): Promise<boolean> =>
+    ipcRenderer.invoke(IPC.MARK_ALL_READ, accountId),
+
+  // ── My PRs & Issues ──
   getMyPRs: (): Promise<UserItem[]> => ipcRenderer.invoke(IPC.GET_MY_PRS),
   getMyIssues: (): Promise<UserItem[]> => ipcRenderer.invoke(IPC.GET_MY_ISSUES),
 
-  // Check runs
-  getCheckRuns: (owner: string, repo: string, ref: string): Promise<CheckSuiteSummary> =>
-    ipcRenderer.invoke(IPC.GET_CHECK_RUNS, owner, repo, ref),
+  // ── Detail endpoints (account-aware) ──
+  getCheckRuns: (accountId: string, owner: string, repo: string, ref: string): Promise<CheckSuiteSummary> =>
+    ipcRenderer.invoke(IPC.GET_CHECK_RUNS, accountId, owner, repo, ref),
 
-  // Linked items
-  getLinkedItems: (owner: string, repo: string, number: number) =>
-    ipcRenderer.invoke(IPC.GET_LINKED_ITEMS, owner, repo, number) as Promise<{
-      linkedIssues: Array<{ number: number; title: string; state: string; html_url: string; repository: string }>;
-      linkedPRs: Array<{ number: number; title: string; state: string; html_url: string; repository: string }>;
-    }>,
+  getLinkedItems: (accountId: string, owner: string, repo: string, number: number): Promise<ProviderLinkedItems> =>
+    ipcRenderer.invoke(IPC.GET_LINKED_ITEMS, accountId, owner, repo, number),
 
-  // Details
-  getIssueDetail: (owner: string, repo: string, number: number): Promise<IssueDetail> =>
-    ipcRenderer.invoke(IPC.GET_ISSUE_DETAIL, owner, repo, number),
-  getPRDetail: (owner: string, repo: string, number: number): Promise<PRDetail> =>
-    ipcRenderer.invoke(IPC.GET_PR_DETAIL, owner, repo, number),
-  getComments: (owner: string, repo: string, number: number): Promise<Comment[]> =>
-    ipcRenderer.invoke(IPC.GET_COMMENTS, owner, repo, number),
-  postComment: (owner: string, repo: string, number: number, body: string): Promise<Comment> =>
-    ipcRenderer.invoke(IPC.POST_COMMENT, owner, repo, number, body),
+  getIssueDetail: (accountId: string, owner: string, repo: string, number: number): Promise<IssueDetail> =>
+    ipcRenderer.invoke(IPC.GET_ISSUE_DETAIL, accountId, owner, repo, number),
 
-  // Repos
-  getRepos: (): Promise<Array<{ full_name: string; description: string | null }>> =>
-    ipcRenderer.invoke(IPC.GET_REPOS),
+  getPRDetail: (accountId: string, owner: string, repo: string, number: number): Promise<PRDetail> =>
+    ipcRenderer.invoke(IPC.GET_PR_DETAIL, accountId, owner, repo, number),
 
-  // Settings
+  getComments: (accountId: string, owner: string, repo: string, number: number): Promise<Comment[]> =>
+    ipcRenderer.invoke(IPC.GET_COMMENTS, accountId, owner, repo, number),
+
+  postComment: (accountId: string, owner: string, repo: string, number: number, body: string): Promise<Comment> =>
+    ipcRenderer.invoke(IPC.POST_COMMENT, accountId, owner, repo, number, body),
+
+  // ── Repos ──
+  getRepos: (accountId?: string): Promise<ProviderRepo[]> =>
+    ipcRenderer.invoke(IPC.GET_REPOS, accountId),
+
+  // ── Settings ──
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke(IPC.GET_SETTINGS),
   updateSettings: (partial: Partial<AppSettings>): Promise<AppSettings> =>
     ipcRenderer.invoke(IPC.UPDATE_SETTINGS, partial),
 
-  // Polling
+  // ── Polling ──
   pollNow: (): Promise<boolean> => ipcRenderer.invoke(IPC.POLL_NOW),
 
-  // External
+  // ── Updates ──
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke(IPC.GET_APP_VERSION),
+  checkForUpdates: (): Promise<boolean> => ipcRenderer.invoke(IPC.CHECK_FOR_UPDATES),
+  downloadUpdate: (): Promise<boolean> => ipcRenderer.invoke(IPC.DOWNLOAD_UPDATE),
+  quitAndInstall: (): Promise<boolean> => ipcRenderer.invoke(IPC.QUIT_AND_INSTALL),
+  getUpdateStatus: (): Promise<any> => ipcRenderer.invoke(IPC.GET_UPDATE_STATUS),
+
+  // ── External ──
   openExternal: (url: string): Promise<boolean> => ipcRenderer.invoke(IPC.OPEN_EXTERNAL, url),
 
-  // Events
+  // ── Events ──
   onNotificationsUpdated: (cb: (data: GitHubNotification[]) => void) => {
     const h = (_e: any, d: GitHubNotification[]) => cb(d);
     ipcRenderer.on(IPC.NOTIFICATIONS_UPDATED, h);
@@ -79,9 +93,14 @@ export const api = {
     ipcRenderer.on(IPC.CHECK_STATUS_CHANGED, h);
     return () => ipcRenderer.removeListener(IPC.CHECK_STATUS_CHANGED, h);
   },
-  onRateLimitInfo: (cb: (info: RateLimitInfo) => void) => {
-    const h = (_e: any, d: RateLimitInfo) => cb(d);
+  onRateLimitInfo: (cb: (info: RateLimitInfo[]) => void) => {
+    const h = (_e: any, d: RateLimitInfo[]) => cb(d);
     ipcRenderer.on(IPC.RATE_LIMIT_INFO, h);
     return () => ipcRenderer.removeListener(IPC.RATE_LIMIT_INFO, h);
+  },
+  onUpdateStatus: (cb: (status: any) => void) => {
+    const h = (_e: any, d: any) => cb(d);
+    ipcRenderer.on(IPC.UPDATE_STATUS_CHANGED, h);
+    return () => ipcRenderer.removeListener(IPC.UPDATE_STATUS_CHANGED, h);
   },
 };

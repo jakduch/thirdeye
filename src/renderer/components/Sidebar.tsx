@@ -22,7 +22,7 @@ interface Props {
   onRefresh: () => void;
   onMarkAllRead: () => void;
   onOpenSettings: () => void;
-  rateLimit: RateLimitInfo | null;
+  rateLimits: RateLimitInfo[];
 }
 
 interface TabDef {
@@ -34,7 +34,7 @@ interface TabDef {
 
 export default function Sidebar({
   notifications, myPRs, myIssues, activeTab, selectedRepo,
-  onTabChange, onSelectRepo, onRefresh, onMarkAllRead, onOpenSettings, rateLimit,
+  onTabChange, onSelectRepo, onRefresh, onMarkAllRead, onOpenSettings, rateLimits,
 }: Props) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -271,37 +271,50 @@ export default function Sidebar({
         })}
       </Box>
 
-      {/* Rate limit footer */}
-      {rateLimit && (
-        <Box sx={{
-          px: 1.5, py: 1,
-          borderTop: `1px solid ${borderColor}`,
-          display: 'flex', alignItems: 'center', gap: 1,
-        }}>
-          <Box sx={{
-            width: '100%',
-            height: 3,
-            borderRadius: 2,
-            bgcolor: isDark ? '#21262d' : '#eaeef2',
-            overflow: 'hidden',
-          }}>
+      {/* Rate limit footer — show worst-case across all accounts */}
+      {rateLimits.length > 0 && (() => {
+        const worst = rateLimits.reduce((a, b) =>
+          (a.remaining / a.limit) < (b.remaining / b.limit) ? a : b
+        );
+        const totalRemaining = rateLimits.reduce((s, r) => s + r.remaining, 0);
+        const totalLimit = rateLimits.reduce((s, r) => s + r.limit, 0);
+        return (
+          <Tooltip title={rateLimits.map(r =>
+            `${r.displayName || r.provider}: ${r.remaining}/${r.limit}`
+          ).join('\n')} placement="top">
             <Box sx={{
-              width: `${(rateLimit.remaining / rateLimit.limit) * 100}%`,
-              height: '100%',
-              borderRadius: 2,
-              bgcolor: rateLimit.remaining < 100
-                ? (isDark ? '#f85149' : '#cf222e')
-                : rateLimit.remaining < 500
-                  ? (isDark ? '#d29922' : '#bf8700')
-                  : (isDark ? '#3fb950' : '#1a7f37'),
-              transition: 'width 0.3s ease',
-            }} />
-          </Box>
-          <Typography sx={{ fontSize: '11px', color: theme.palette.text.secondary, whiteSpace: 'nowrap' }}>
-            {rateLimit.remaining}/{rateLimit.limit}
-          </Typography>
-        </Box>
-      )}
+              px: 1.5, py: 1,
+              borderTop: `1px solid ${borderColor}`,
+              display: 'flex', alignItems: 'center', gap: 1,
+            }}>
+              <Box sx={{
+                width: '100%',
+                height: 3,
+                borderRadius: 2,
+                bgcolor: isDark ? '#21262d' : '#eaeef2',
+                overflow: 'hidden',
+              }}>
+                <Box sx={{
+                  width: `${totalLimit > 0 ? (totalRemaining / totalLimit) * 100 : 0}%`,
+                  height: '100%',
+                  borderRadius: 2,
+                  bgcolor: worst.remaining < 100
+                    ? (isDark ? '#f85149' : '#cf222e')
+                    : worst.remaining < 500
+                      ? (isDark ? '#d29922' : '#bf8700')
+                      : (isDark ? '#3fb950' : '#1a7f37'),
+                  transition: 'width 0.3s ease',
+                }} />
+              </Box>
+              <Typography sx={{ fontSize: '11px', color: theme.palette.text.secondary, whiteSpace: 'nowrap' }}>
+                {rateLimits.length === 1
+                  ? `${worst.remaining}/${worst.limit}`
+                  : `${rateLimits.length} accts`}
+              </Typography>
+            </Box>
+          </Tooltip>
+        );
+      })()}
     </Box>
   );
 }

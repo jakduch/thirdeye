@@ -1,6 +1,6 @@
 {
   "name": "thirdeye-git",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "description": "ThirdEye.git — GitHub repository monitoring desktop app",
   "main": "dist/main.js",
   "scripts": {
@@ -13,7 +13,8 @@
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
-    "dist:linux": "npm run build && electron-builder --linux"
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:all": "npm run build && electron-builder --mac --win --linux"
   },
   "author": "Jakub Duch",
   "license": "BSD-3-Clause",
@@ -26,6 +27,7 @@
     "@octokit/rest": "^21.0.0",
     "@reduxjs/toolkit": "^2.0.0",
     "electron-store": "^10.0.0",
+    "electron-updater": "^6.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.0",

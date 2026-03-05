@@ -6,7 +6,7 @@ import type { RootState, AppDispatch } from '../store';
 import {
   fetchAll, pollNow, markAllRead, markRead,
   setSelectedRepo, setNotifications, setMyPRs, setMyIssues,
-  setRateLimit, setActiveTab, markItemViewed, setShowClosed,
+  setRateLimits, setActiveTab, markItemViewed, setShowClosed,
 } from '../store/notificationsSlice';
 import { api } from '../api/ipc-client';
 import Sidebar from '../components/Sidebar';
@@ -23,7 +23,7 @@ export default function Dashboard({ onOpenSettings }: Props) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const dispatch = useDispatch<AppDispatch>();
-  const { notifications, myPRs, myIssues, selectedRepo, rateLimit, activeTab, showClosed } = useSelector((s: RootState) => s.app);
+  const { notifications, myPRs, myIssues, selectedRepo, rateLimits, activeTab, showClosed } = useSelector((s: RootState) => s.app);
   const [selectedItem, setSelectedItem] = useState<UserItem | null>(null);
   const [selectedNotification, setSelectedNotification] = useState<GitHubNotification | null>(null);
 
@@ -34,7 +34,7 @@ export default function Dashboard({ onOpenSettings }: Props) {
     const unsub1 = api.onNotificationsUpdated((d) => dispatch(setNotifications(d)));
     const unsub2 = api.onMyPRsUpdated((d) => dispatch(setMyPRs(d)));
     const unsub3 = api.onMyIssuesUpdated((d) => dispatch(setMyIssues(d)));
-    const unsub4 = api.onRateLimitInfo((d) => dispatch(setRateLimit(d)));
+    const unsub4 = api.onRateLimitInfo((d) => dispatch(setRateLimits(d)));
     return () => { unsub1(); unsub2(); unsub3(); unsub4(); };
   }, [dispatch]);
 
@@ -45,11 +45,13 @@ export default function Dashboard({ onOpenSettings }: Props) {
 
   const handleSelectNotification = (n: GitHubNotification) => {
     setSelectedNotification(n);
-    if (n.unread) dispatch(markRead(n.id));
+    if (n.unread) dispatch(markRead({ accountId: n.accountId, threadId: n.id }));
     if (n.number) {
       const [owner, name] = n.repository.full_name.split('/');
       setSelectedItem({
         id: parseInt(n.id, 10),
+        provider: n.provider,
+        accountId: n.accountId,
         number: n.number,
         title: n.subject.title,
         state: 'open',
@@ -60,7 +62,7 @@ export default function Dashboard({ onOpenSettings }: Props) {
         created_at: n.updated_at,
         updated_at: n.updated_at,
         comments: 0,
-        type: n.subject.type === 'PullRequest' ? 'pr' : 'issue',
+        type: n.subject.type === 'PullRequest' ? 'pr' : (n.subject.type === 'MergeRequest' ? 'mr' : 'issue'),
       });
     }
   };
@@ -103,7 +105,7 @@ export default function Dashboard({ onOpenSettings }: Props) {
         onRefresh={() => dispatch(pollNow())}
         onMarkAllRead={() => dispatch(markAllRead())}
         onOpenSettings={onOpenSettings}
-        rateLimit={rateLimit}
+        rateLimits={rateLimits}
       />
 
       {/* Item list pane */}
