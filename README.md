@@ -5,12 +5,25 @@
 <h1 align="center">ThirdEye.git</h1>
 
 <p align="center">
+  <a href="https://github.com/jakduch/thirdeye/releases/latest"><img src="https://img.shields.io/github/v/release/jakduch/thirdeye?color=green&label=latest%20release" alt="Latest Release"></a>
+  <a href="https://github.com/jakduch/thirdeye/releases"><img src="https://img.shields.io/github/downloads/jakduch/thirdeye/total?color=brightgreen" alt="Downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" alt="Platform">
+  <a href="https://github.com/jakduch/thirdeye/releases/latest"><img src="https://img.shields.io/badge/macOS-Universal-000000.svg?logo=apple&logoColor=white" alt="macOS"></a>
+  <a href="https://github.com/jakduch/thirdeye/releases/latest"><img src="https://img.shields.io/badge/Windows-x64-0078D6.svg?logo=windows&logoColor=white" alt="Windows"></a>
+  <a href="https://github.com/jakduch/thirdeye/releases/latest"><img src="https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624.svg?logo=linux&logoColor=black" alt="Linux"></a>
+  <br>
   <img src="https://img.shields.io/badge/electron-35-47848F.svg?logo=electron" alt="Electron">
   <img src="https://img.shields.io/badge/react-19-61DAFB.svg?logo=react" alt="React">
   <img src="https://img.shields.io/badge/typescript-5-3178C6.svg?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/redux%20toolkit-2-764ABC.svg?logo=redux&logoColor=white" alt="Redux Toolkit">
+  <img src="https://img.shields.io/badge/MUI-6-007FFF.svg?logo=mui&logoColor=white" alt="Material UI">
   <img src="https://img.shields.io/badge/GitHub%20API-v3-181717.svg?logo=github" alt="GitHub API">
+  <br>
+  <a href="https://github.com/jakduch/thirdeye"><img src="https://img.shields.io/github/stars/jakduch/thirdeye?style=social" alt="GitHub Stars"></a>
+  <a href="https://github.com/jakduch/thirdeye/issues"><img src="https://img.shields.io/github/issues/jakduch/thirdeye" alt="Open Issues"></a>
+  <a href="https://github.com/jakduch/thirdeye/commits/main"><img src="https://img.shields.io/github/last-commit/jakduch/thirdeye" alt="Last Commit"></a>
+  <img src="https://img.shields.io/github/repo-size/jakduch/thirdeye" alt="Repo Size">
 </p>
 
 <p align="center">
