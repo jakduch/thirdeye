@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { GitHubNotification, UserItem, RateLimitInfo, SidebarTab } from '../../shared/types';
+import type {
+  GitHubNotification, UserItem, RateLimitInfo, SidebarTab, Account,
+} from '../../shared/types';
 import { api } from '../api/ipc-client';
 
 export interface AppState {
@@ -9,11 +11,14 @@ export interface AppState {
   loading: boolean;
   error: string | null;
   selectedRepo: string | null;
-  rateLimit: RateLimitInfo | null;
+  rateLimits: RateLimitInfo[];
   activeTab: SidebarTab;
   showClosed: boolean;
   locallyReadIds: string[];
   viewedItemKeys: string[];
+  // Multi-account
+  accounts: Account[];
+  selectedAccountId: string | null; // null = show all
 }
 
 const initialState: AppState = {
@@ -23,20 +28,23 @@ const initialState: AppState = {
   loading: false,
   error: null,
   selectedRepo: null,
-  rateLimit: null,
+  rateLimits: [],
   activeTab: 'prs',
   showClosed: true,
   locallyReadIds: [],
   viewedItemKeys: [],
+  accounts: [],
+  selectedAccountId: null,
 };
 
 export const fetchAll = createAsyncThunk('app/fetchAll', async () => {
-  const [notifications, myPRs, myIssues] = await Promise.all([
+  const [notifications, myPRs, myIssues, accounts] = await Promise.all([
     api.getNotifications(),
     api.getMyPRs(),
     api.getMyIssues(),
+    api.getAccounts(),
   ]);
-  return { notifications, myPRs, myIssues };
+  return { notifications, myPRs, myIssues, accounts };
 });
 
 export const pollNow = createAsyncThunk('app/pollNow', async () => {
@@ -51,15 +59,36 @@ export const pollNow = createAsyncThunk('app/pollNow', async () => {
 
 export const markRead = createAsyncThunk(
   'app/markRead',
-  async (threadId: string) => {
-    try { await api.markRead(threadId); } catch { /* notifications scope may be missing */ }
+  async ({ accountId, threadId }: { accountId: string; threadId: string }) => {
+    try { await api.markRead(accountId, threadId); } catch { /* scope may be missing */ }
     return threadId;
   },
 );
 
-export const markAllRead = createAsyncThunk('app/markAllRead', async () => {
-  try { await api.markAllRead(); } catch { /* notifications scope may be missing */ }
+export const markAllRead = createAsyncThunk(
+  'app/markAllRead',
+  async (accountId?: string) => {
+    try { await api.markAllRead(accountId); } catch { /* scope may be missing */ }
+  },
+);
+
+export const fetchAccounts = createAsyncThunk('app/fetchAccounts', async () => {
+  return api.getAccounts();
 });
+
+export const addAccount = createAsyncThunk(
+  'app/addAccount',
+  async (account: Account) => {
+    return api.addAccount(account);
+  },
+);
+
+export const removeAccount = createAsyncThunk(
+  'app/removeAccount',
+  async (accountId: string) => {
+    return api.removeAccount(accountId);
+  },
+);
 
 // Helper: apply locally-read state to notifications
 function applyLocalReads(notifications: GitHubNotification[], locallyReadIds: string[]): GitHubNotification[] {
@@ -84,8 +113,8 @@ const appSlice = createSlice({
     setSelectedRepo(state, action: PayloadAction<string | null>) {
       state.selectedRepo = action.payload;
     },
-    setRateLimit(state, action: PayloadAction<RateLimitInfo>) {
-      state.rateLimit = action.payload;
+    setRateLimits(state, action: PayloadAction<RateLimitInfo[]>) {
+      state.rateLimits = action.payload;
     },
     setActiveTab(state, action: PayloadAction<SidebarTab>) {
       state.activeTab = action.payload;
@@ -98,6 +127,21 @@ const appSlice = createSlice({
     setShowClosed(state, action: PayloadAction<boolean>) {
       state.showClosed = action.payload;
     },
+    setSelectedAccountId(state, action: PayloadAction<string | null>) {
+      state.selectedAccountId = action.payload;
+    },
+    setAccounts(state, action: PayloadAction<Account[]>) {
+      state.accounts = action.payload;
+    },
+    // Legacy compatibility
+    setRateLimit(state, action: PayloadAction<RateLimitInfo | RateLimitInfo[]>) {
+      if (Array.isArray(action.payload)) {
+        state.rateLimits = action.payload;
+      } else {
+        // Legacy single rate limit — wrap in array
+        state.rateLimits = [action.payload];
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -107,6 +151,7 @@ const appSlice = createSlice({
         state.notifications = applyLocalReads(action.payload.notifications, state.locallyReadIds);
         state.myPRs = action.payload.myPRs;
         state.myIssues = action.payload.myIssues;
+        state.accounts = action.payload.accounts;
         state.error = null;
       })
       .addCase(fetchAll.rejected, (state, action) => {
@@ -120,11 +165,9 @@ const appSlice = createSlice({
       })
       .addCase(markRead.fulfilled, (state, action) => {
         const threadId = action.payload;
-        // Persist in local read set
         if (!state.locallyReadIds.includes(threadId)) {
           state.locallyReadIds.push(threadId);
         }
-        // Immediately update UI
         const n = state.notifications.find(i => i.id === threadId);
         if (n) n.unread = false;
       })
@@ -135,13 +178,23 @@ const appSlice = createSlice({
             state.locallyReadIds.push(n.id);
           }
         });
+      })
+      .addCase(fetchAccounts.fulfilled, (state, action) => {
+        state.accounts = action.payload;
+      })
+      .addCase(addAccount.fulfilled, (state, action) => {
+        state.accounts = action.payload;
+      })
+      .addCase(removeAccount.fulfilled, (state, action) => {
+        state.accounts = action.payload;
       });
   },
 });
 
 export const {
   setNotifications, setMyPRs, setMyIssues,
-  setSelectedRepo, setRateLimit, setActiveTab,
+  setSelectedRepo, setRateLimit, setRateLimits, setActiveTab,
   markItemViewed, setShowClosed,
+  setSelectedAccountId, setAccounts,
 } = appSlice.actions;
 export default appSlice.reducer;

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import type { GitHubNotification } from '../../shared/types';
+import { PROVIDER_LABELS } from '../../shared/provider-types';
 
 interface Props {
   notifications: GitHubNotification[];
@@ -132,6 +133,18 @@ export default function NotificationList({ notifications, onSelect, selectedId }
                 {n.subject.title}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {n.provider && n.provider !== 'github' && (
+                  <Box sx={{
+                    fontSize: '9px', fontWeight: 700,
+                    color: '#fff',
+                    bgcolor: PROVIDER_LABELS[n.provider]?.color || '#666',
+                    px: 0.5, py: 0, borderRadius: '3px',
+                    lineHeight: 1.5, textTransform: 'uppercase',
+                    letterSpacing: '0.03em',
+                  }}>
+                    {PROVIDER_LABELS[n.provider]?.label.slice(0, 2) || n.provider.slice(0, 2)}
+                  </Box>
+                )}
                 <Typography sx={{ fontSize: '11px', color: theme.palette.text.secondary }}>
                   {n.repository.name}
                   {n.number ? ` #${n.number}` : ''}

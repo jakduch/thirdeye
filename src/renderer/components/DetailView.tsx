@@ -98,18 +98,19 @@ export default function DetailView({ item }: Props) {
     setComments([]);
     const fetchData = async () => {
       try {
+        const acct = item.accountId || '';
         const d = item.type === 'pr'
-          ? await api.getPRDetail(owner, name, item.number)
-          : await api.getIssueDetail(owner, name, item.number);
+          ? await api.getPRDetail(acct, owner, name, item.number)
+          : await api.getIssueDetail(acct, owner, name, item.number);
         setDetail(d);
         const [c, li] = await Promise.all([
-          api.getComments(owner, name, item.number),
-          api.getLinkedItems(owner, name, item.number),
+          api.getComments(acct, owner, name, item.number),
+          api.getLinkedItems(acct, owner, name, item.number),
         ]);
         setComments(c);
         setLinked(li);
         if (item.type === 'pr' && 'head' in d) {
-          const ch = await api.getCheckRuns(owner, name, (d as PRDetail).head.sha);
+          const ch = await api.getCheckRuns(acct, owner, name, (d as PRDetail).head.sha);
           setChecks(ch);
         }
       } catch (err) {
@@ -125,7 +126,7 @@ export default function DetailView({ item }: Props) {
     if (!replyText.trim()) return;
     setSending(true);
     try {
-      const nc = await api.postComment(owner, name, item.number, replyText.trim());
+      const nc = await api.postComment(item.accountId || '', owner, name, item.number, replyText.trim());
       setComments(prev => [...prev, nc]);
       setReplyText('');
     } catch (err) { console.error('Failed to post comment:', err); }
@@ -173,7 +174,7 @@ export default function DetailView({ item }: Props) {
               </Typography>
             </Typography>
           </Box>
-          <Tooltip title="Open on GitHub">
+          <Tooltip title="Open in browser">
             <IconButton
               size="small"
               onClick={() => api.openExternal(detail.html_url)}

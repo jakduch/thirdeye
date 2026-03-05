@@ -5,6 +5,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import type { UserItem } from '../../shared/types';
+import { PROVIDER_LABELS } from '../../shared/provider-types';
 
 interface Props {
   items: UserItem[];
@@ -160,6 +161,18 @@ export default function ItemList({ items, onSelect, selectedId }: Props) {
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                {item.provider && item.provider !== 'github' && (
+                  <Box sx={{
+                    fontSize: '9px', fontWeight: 700,
+                    color: '#fff',
+                    bgcolor: PROVIDER_LABELS[item.provider]?.color || '#666',
+                    px: 0.5, py: 0, borderRadius: '3px',
+                    lineHeight: 1.5, textTransform: 'uppercase',
+                    letterSpacing: '0.03em',
+                  }}>
+                    {PROVIDER_LABELS[item.provider]?.label.slice(0, 2) || item.provider.slice(0, 2)}
+                  </Box>
+                )}
                 <Typography sx={{ fontSize: '11px', color: theme.palette.text.secondary }}>
                   {item.repository.name}#{item.number}
                 </Typography>

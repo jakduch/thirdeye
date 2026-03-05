@@ -1,17 +1,18 @@
 import { app, BrowserWindow, Notification } from 'electron';
 import * as path from 'path';
-import { GitHubService } from './github/GitHubService';
-import { PollingManager } from './github/PollingManager';
+import { ProviderRegistry } from './providers/ProviderRegistry';
+import { AggregatePollingManager } from './polling/AggregatePollingManager';
 import { registerIpcHandlers } from './ipc-handlers';
 import { createTray, updateUnreadCount, showNotification, destroyTray } from './tray';
 import * as settings from './settings';
-import type { GitHubNotification, ActivityEvent } from '../shared/types';
+import { initUpdater, checkForUpdates, downloadUpdate, isNativeUpdaterAvailable, getUpdateStatus } from './updater';
+import type { ProviderNotification, ProviderActivityEvent } from '../shared/provider-types';
 
 // Set app name so dev builds also show "ThirdEye" (not "Electron")
 app.setName('ThirdEye');
 
 let mainWindow: BrowserWindow | null = null;
-const github = new GitHubService();
+const registry = new ProviderRegistry();
 let isQuitting = false;
 
 function getMainWindow(): BrowserWindow | null {
@@ -39,7 +40,7 @@ function createWindow(): void {
 
 let previousUnreadIds = new Set<string>();
 
-function onActivity(event: ActivityEvent): void {
+function onActivity(event: ProviderActivityEvent): void {
   settings.getSettings().then(s => {
     if (!s.showNotifications) return;
     if (!Notification.isSupported()) return;
@@ -50,7 +51,7 @@ function onActivity(event: ActivityEvent): void {
   });
 }
 
-function onNotificationsUpdate(notifications: GitHubNotification[]): void {
+function onNotificationsUpdate(notifications: ProviderNotification[]): void {
   const unread = notifications.filter(n => n.unread);
   updateUnreadCount(unread.length, getMainWindow, () => polling.poll());
   settings.getSettings().then(s => {
@@ -64,8 +65,8 @@ function onNotificationsUpdate(notifications: GitHubNotification[]): void {
   });
 }
 
-const polling = new PollingManager(
-  github,
+const polling = new AggregatePollingManager(
+  registry,
   getMainWindow,
   onNotificationsUpdate,
   onActivity,
@@ -77,22 +78,51 @@ app.on('before-quit', () => { isQuitting = true; });
 app.whenReady().then(async () => {
   createWindow();
   createTray(getMainWindow, () => polling.poll());
-  registerIpcHandlers(github, polling);
+  registerIpcHandlers(registry, polling);
 
-  const token = await settings.getToken();
-  if (token) {
-    github.setToken(token);
+  // Run migration from old single-token to multi-account
+  await settings.migrateIfNeeded();
+
+  const accounts = await settings.getAccounts();
+  const enabled = accounts.filter(a => a.enabled);
+
+  if (enabled.length > 0) {
+    // Initialize providers for all enabled accounts
+    polling.initializeAccounts(enabled);
+
+    // Restore per-account caches
+    const caches = await settings.getAllProviderCaches();
+    for (const provider of registry.all()) {
+      const cached = caches[provider.accountId];
+      if (cached) provider.restoreCache(cached);
+    }
+
     const s = await settings.getSettings();
-    // Autostart login-item
+
     if (s.launchAtStartup) {
       app.setLoginItemSettings({ openAtLogin: true, openAsHidden: true });
     }
-    // Restore disk cache
-    const cached = await settings.getCache();
-    if (cached) {
-      github.cache.restoreFromDisk(cached);
-    }
+
     polling.start(s.pollInterval);
+  }
+
+  // Initialize updater (sets up event listeners, autoDownload based on settings)
+  const appSettings = await settings.getSettings();
+  if (mainWindow) await initUpdater(mainWindow, appSettings.autoUpdate);
+
+  // Auto-update check (delayed 5s to not block startup)
+  // Native updater: checks + downloads automatically via electron-updater events
+  // Fallback: checks GitHub API, then downloads installer to Downloads folder
+  if (appSettings.autoUpdate) {
+    setTimeout(async () => {
+      try {
+        await checkForUpdates();
+        // In fallback mode, auto-download to Downloads if update available
+        if (!isNativeUpdaterAvailable() && getUpdateStatus().status === 'available') {
+          await downloadUpdate();
+        }
+      } catch { /* ignore */ }
+    }, 5000);
   }
 });
 
@@ -102,9 +132,13 @@ app.on('activate', () => { if (mainWindow === null) createWindow(); else mainWin
 app.on('will-quit', async () => {
   destroyTray();
   polling.stop();
-  // Persist cache to disk
+  // Persist per-account caches to disk
   try {
-    const snapshot = github.cache.snapshotForDisk();
-    await settings.setCache(snapshot);
+    const caches: Record<string, any> = {};
+    for (const provider of registry.all()) {
+      const snapshot = provider.snapshotCache();
+      if (snapshot) caches[provider.accountId] = snapshot;
+    }
+    await settings.setAllProviderCaches(caches);
   } catch { /* ignore */ }
 });
