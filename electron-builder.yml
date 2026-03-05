@@ -54,10 +54,8 @@ linux:
   category: Development
   maintainer: Jakub Duch
   executableName: thirdeye
-  desktop:
-    Name: ThirdEye
-    Comment: GitHub repository monitoring desktop app
-    Categories: Development;Utility;
+  synopsis: GitHub repository monitoring desktop app
+  description: Monitor your GitHub PRs, issues, notifications, and CI checks from your desktop.
 
 deb:
   depends:
