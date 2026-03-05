@@ -306,6 +306,10 @@ export async function checkForUpdates(): Promise<void> {
 
 export async function downloadUpdate(): Promise<void> {
   if (useNativeUpdater && nativeAutoUpdater) {
+    // electron-updater requires checkForUpdates() before downloadUpdate()
+    if (currentStatus.status !== 'available' && currentStatus.status !== 'downloading') {
+      await nativeAutoUpdater.checkForUpdates();
+    }
     await nativeAutoUpdater.downloadUpdate();
   } else {
     await downloadToDownloads();
