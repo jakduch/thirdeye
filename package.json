@@ -1,6 +1,6 @@
 {
   "name": "thirdeye-git",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "description": "ThirdEye.git — GitHub repository monitoring desktop app",
   "main": "dist/main.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "dist:linux": "npm run build && npx electron-builder --linux",
     "dist:all": "npm run build && npx electron-builder --mac --win --linux"
   },
-  "author": "Jakub Duch",
+  "author": "Jakub Duchek",
   "license": "BSD-3-Clause",
   "type": "commonjs",
   "dependencies": {
