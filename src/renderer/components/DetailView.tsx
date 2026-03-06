@@ -6,12 +6,14 @@ import {
 import { useTheme } from '@mui/material/styles';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SendIcon from '@mui/icons-material/Send';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import GitHubMarkdown from './GitHubMarkdown';
 import { api } from '../api/ipc-client';
-import type { UserItem, IssueDetail, PRDetail, Comment, CheckSuiteSummary } from '../../shared/types';
+import type { UserItem, IssueDetail, PRDetail, Comment, CheckSuiteSummary, AppSettings } from '../../shared/types';
 
 interface Props {
   item: UserItem;
@@ -87,8 +89,16 @@ export default function DetailView({ item }: Props) {
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
+  const [commentSortOrder, setCommentSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const { owner, name } = item.repository;
+
+  // Load comment sort order from settings
+  useEffect(() => {
+    api.getSettings().then(s => {
+      if (s.commentSortOrder) setCommentSortOrder(s.commentSortOrder);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -398,7 +408,36 @@ export default function DetailView({ item }: Props) {
           )}
 
           {/* ── Comments ── */}
-          {comments.map(c => (
+          {comments.length > 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 0.5 }}>
+              <Tooltip title={commentSortOrder === 'asc' ? 'Oldest first' : 'Newest first'}>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    const next = commentSortOrder === 'asc' ? 'desc' : 'asc';
+                    setCommentSortOrder(next);
+                    api.updateSettings({ commentSortOrder: next });
+                  }}
+                  sx={{
+                    width: 28, height: 28,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    '&:hover': { bgcolor: isDark ? '#21262d' : '#f3f4f6' },
+                  }}
+                >
+                  {commentSortOrder === 'asc'
+                    ? <ArrowUpwardIcon sx={{ fontSize: 14 }} />
+                    : <ArrowDownwardIcon sx={{ fontSize: 14 }} />}
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+          {[...comments]
+            .sort((a, b) => {
+              const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+              return commentSortOrder === 'asc' ? diff : -diff;
+            })
+            .map(c => (
             <CommentBox
               key={c.id}
               avatarUrl={c.user.avatar_url}

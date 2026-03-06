@@ -18,6 +18,7 @@ export interface AppSettings {
   showNotifications: boolean;
   launchAtStartup: boolean;
   showClosed: boolean; // show closed/merged PRs and Issues in lists
+  commentSortOrder: 'asc' | 'desc'; // ascending = oldest first, descending = newest first
   theme: 'light' | 'dark' | 'system';
   autoUpdate: boolean; // check for updates on startup
 }
@@ -29,6 +30,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showNotifications: true,
   launchAtStartup: false,
   showClosed: true,
+  commentSortOrder: 'asc',
   theme: 'system',
   autoUpdate: true,
 };

@@ -683,6 +683,29 @@ export default function Settings({ onBack, onLogout, onSettingsChange }: Props) 
           <Typography sx={{ fontSize: '12px', color: theme.palette.text.secondary, ml: 4.5, mt: 0.3 }}>
             When off, only open items are shown in the lists
           </Typography>
+
+          <Box sx={{ mt: 2.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel sx={{ fontSize: '13px' }}>Comment sort order</InputLabel>
+                <Select
+                  value={settings.commentSortOrder || 'asc'}
+                  label="Comment sort order"
+                  onChange={(e) => setSettings(s => ({ ...s, commentSortOrder: e.target.value as 'asc' | 'desc' }))}
+                  sx={{
+                    borderRadius: '6px', fontSize: '13px',
+                    bgcolor: isDark ? '#0d1117' : '#f6f8fa',
+                  }}
+                >
+                  <MenuItem value="asc">Oldest first</MenuItem>
+                  <MenuItem value="desc">Newest first</MenuItem>
+                </Select>
+              </FormControl>
+              <Typography sx={{ fontSize: '12px', color: theme.palette.text.secondary }}>
+                Sort order for comments under PRs and Issues
+              </Typography>
+            </Box>
+          </Box>
         </SectionCard>
 
         {/* Notifications */}

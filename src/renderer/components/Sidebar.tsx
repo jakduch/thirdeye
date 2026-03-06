@@ -271,50 +271,61 @@ export default function Sidebar({
         })}
       </Box>
 
-      {/* Rate limit footer — show worst-case across all accounts */}
-      {rateLimits.length > 0 && (() => {
-        const worst = rateLimits.reduce((a, b) =>
-          (a.remaining / a.limit) < (b.remaining / b.limit) ? a : b
-        );
-        const totalRemaining = rateLimits.reduce((s, r) => s + r.remaining, 0);
-        const totalLimit = rateLimits.reduce((s, r) => s + r.limit, 0);
-        return (
-          <Tooltip title={rateLimits.map(r =>
-            `${r.displayName || r.provider}: ${r.remaining}/${r.limit}`
-          ).join('\n')} placement="top">
-            <Box sx={{
-              px: 1.5, py: 1,
-              borderTop: `1px solid ${borderColor}`,
-              display: 'flex', alignItems: 'center', gap: 1,
-            }}>
-              <Box sx={{
-                width: '100%',
-                height: 3,
-                borderRadius: 2,
-                bgcolor: isDark ? '#21262d' : '#eaeef2',
-                overflow: 'hidden',
-              }}>
-                <Box sx={{
-                  width: `${totalLimit > 0 ? (totalRemaining / totalLimit) * 100 : 0}%`,
-                  height: '100%',
-                  borderRadius: 2,
-                  bgcolor: worst.remaining < 100
-                    ? (isDark ? '#f85149' : '#cf222e')
-                    : worst.remaining < 500
-                      ? (isDark ? '#d29922' : '#bf8700')
-                      : (isDark ? '#3fb950' : '#1a7f37'),
-                  transition: 'width 0.3s ease',
-                }} />
-              </Box>
-              <Typography sx={{ fontSize: '11px', color: theme.palette.text.secondary, whiteSpace: 'nowrap' }}>
-                {rateLimits.length === 1
-                  ? `${worst.remaining}/${worst.limit}`
-                  : `${rateLimits.length} accts`}
-              </Typography>
-            </Box>
-          </Tooltip>
-        );
-      })()}
+      {/* Rate limit footer — per-account breakdown */}
+      {rateLimits.length > 0 && (
+        <Box sx={{
+          borderTop: `1px solid ${borderColor}`,
+          px: 1.5, py: 0.8,
+        }}>
+          {rateLimits.map((r) => {
+            const pct = r.limit > 0 ? (r.remaining / r.limit) * 100 : 0;
+            const barColor = r.remaining < 100
+              ? (isDark ? '#f85149' : '#cf222e')
+              : r.remaining < 500
+                ? (isDark ? '#d29922' : '#bf8700')
+                : (isDark ? '#3fb950' : '#1a7f37');
+            const resetDate = new Date(r.reset * 1000);
+            const resetMin = Math.max(0, Math.round((resetDate.getTime() - Date.now()) / 60000));
+            return (
+              <Tooltip
+                key={r.accountId}
+                title={`${r.remaining}/${r.limit} — resets in ${resetMin}m`}
+                placement="top"
+              >
+                <Box sx={{ mb: rateLimits.length > 1 ? 0.6 : 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.2 }}>
+                    <Typography noWrap sx={{
+                      fontSize: '10px', fontWeight: 500,
+                      color: theme.palette.text.secondary,
+                      maxWidth: 140,
+                    }}>
+                      {r.displayName || r.provider}
+                    </Typography>
+                    <Typography sx={{
+                      fontSize: '10px',
+                      color: theme.palette.text.secondary,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {r.remaining}/{r.limit}
+                    </Typography>
+                  </Box>
+                  <Box sx={{
+                    width: '100%', height: 3, borderRadius: 2,
+                    bgcolor: isDark ? '#21262d' : '#eaeef2',
+                    overflow: 'hidden',
+                  }}>
+                    <Box sx={{
+                      width: `${pct}%`, height: '100%', borderRadius: 2,
+                      bgcolor: barColor,
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </Box>
+                </Box>
+              </Tooltip>
+            );
+          })}
+        </Box>
+      )}
     </Box>
   );
 }
