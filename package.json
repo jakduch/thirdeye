@@ -1,6 +1,6 @@
 {
   "name": "thirdeye-git",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "ThirdEye.git — GitHub repository monitoring desktop app",
   "main": "dist/main.js",
   "scripts": {
