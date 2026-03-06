@@ -165,7 +165,26 @@ async function tryInitNativeUpdater(autoDownload: boolean): Promise<boolean> {
       }
     });
 
-    nativeAutoUpdater.on('error', (err: Error) => setStatus({ status: 'error', error: err.message }));
+    nativeAutoUpdater.on('error', async (err: Error) => {
+      const msg = err.message || '';
+      const isChecksumError = /sha512 checksum mismatch/i.test(msg)
+        || /checksum/i.test(msg);
+
+      if (isChecksumError) {
+        console.warn('[updater] Native updater checksum error, falling back to GitHub API download:', msg);
+        // Fall back to GitHub API path which doesn't rely on YML checksums
+        try {
+          await checkViaGitHubAPI();
+          if (currentStatus.status === 'available') {
+            await downloadToDownloads();
+          }
+        } catch (fallbackErr: any) {
+          setStatus({ status: 'error', error: `Checksum error & fallback failed: ${fallbackErr.message}` });
+        }
+      } else {
+        setStatus({ status: 'error', error: msg });
+      }
+    });
 
     useNativeUpdater = true;
     return true;
@@ -306,11 +325,20 @@ export async function checkForUpdates(): Promise<void> {
 
 export async function downloadUpdate(): Promise<void> {
   if (useNativeUpdater && nativeAutoUpdater) {
-    // electron-updater requires checkForUpdates() before downloadUpdate()
-    if (currentStatus.status !== 'available' && currentStatus.status !== 'downloading') {
-      await nativeAutoUpdater.checkForUpdates();
+    try {
+      // electron-updater requires checkForUpdates() before downloadUpdate()
+      if (currentStatus.status !== 'available' && currentStatus.status !== 'downloading') {
+        await nativeAutoUpdater.checkForUpdates();
+      }
+      await nativeAutoUpdater.downloadUpdate();
+    } catch (err: any) {
+      // If native download fails (e.g. checksum mismatch), fall back to GitHub API
+      console.warn('[updater] Native download failed, falling back to GitHub API:', err.message);
+      await checkViaGitHubAPI();
+      if (currentStatus.status === 'available') {
+        await downloadToDownloads();
+      }
     }
-    await nativeAutoUpdater.downloadUpdate();
   } else {
     await downloadToDownloads();
   }

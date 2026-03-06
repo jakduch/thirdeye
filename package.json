@@ -14,7 +14,12 @@
     "dist:mac": "npm run build && npx electron-builder --mac",
     "dist:win": "npm run build && npx electron-builder --win",
     "dist:linux": "npm run build && npx electron-builder --linux",
-    "dist:all": "npm run build && npx electron-builder --mac --win --linux"
+    "dist:all": "npm run build && npx electron-builder --mac --win --linux",
+    "release": "npm run build && npx electron-builder --publish always",
+    "release:mac": "npm run build && npx electron-builder --mac --publish always",
+    "release:win": "npm run build && npx electron-builder --win --publish always",
+    "release:linux": "npm run build && npx electron-builder --linux --publish always",
+    "release:all": "npm run build && npx electron-builder --mac --win --linux --publish always"
   },
   "author": "Jakub Duchek",
   "license": "BSD-3-Clause",
